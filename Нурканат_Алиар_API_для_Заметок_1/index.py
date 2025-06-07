@@ -1,13 +1,12 @@
 from fastapi import FastAPI
-from sqlmodel import SQLModel, Session, create_engine, select, Field
+from pydantic import BaseModel
+from datetime import datetime
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from sqlmodel import Session, select, Field, create_engine, SQLModel
 from typing import List, Optional
-from pydantic import BaseModel
 
 load_dotenv()
-
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL)
@@ -28,7 +27,7 @@ class NoteOut(BaseModel):
     text: str
     created_time: datetime
 
-app = FastAPI(title="Notes API")
+app = FastAPI()
 
 @app.on_event("startup")
 def on_start():
@@ -43,9 +42,8 @@ def create_note(note: NoteCreate):
         session.refresh(db_note)
         return db_note
 
-@app.get("/notes", response_model=List[NoteOut])
+@app.get("/notes", response_model=NoteOut)
 def get_notes():
     with Session(engine) as session:
         return session.exec(select(Note)).all()
-
-
+        
