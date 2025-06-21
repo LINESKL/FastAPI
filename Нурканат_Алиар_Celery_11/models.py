@@ -19,8 +19,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
-
-
 # Models
 class User(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True, default=None)

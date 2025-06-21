@@ -5,9 +5,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - SECRET_KEY=${SECRET_KEY}
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
@@ -18,10 +17,8 @@ services:
 
   db:
     image: postgres:16-alpine
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+    env_file:
+      - .env
     ports:
       - "5432:5432"
     volumes:
@@ -34,6 +31,30 @@ services:
       start_period: 60s
     networks:
       - app-network
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A celery_config:celery_app worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      redis:
+        condition: service_started
+      db:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - .:/app
 
 networks:
   app-network:

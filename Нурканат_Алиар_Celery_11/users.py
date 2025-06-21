@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 from metadata import SessionDep
 from models import User, UserCreate, UserOut, UserLogin, get_current_user, hash_password, verify_password, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES, timedelta, Token
+from tasks import send_email_task
 
 router = APIRouter(
     prefix="/users",
@@ -17,6 +18,11 @@ async def register(user: UserCreate, session: SessionDep):
     session.add(new_user)
     await session.commit()
     await session.refresh(new_user)
+    send_email_task.delay(
+        recipient=new_user.username,
+        subject="Welcome to Notes App",
+        body="Thank you for registering!"
+    )
     return new_user
 
 @router.post("/login/", response_model=Token)
