@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build-and-test:
@@ -69,4 +69,3 @@ jobs:
         docker tag fastapi-app ${{ secrets.DOCKER_HUB_USERNAME }}/fastapi-app:latest
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/fastapi-app:latest
 
-        
