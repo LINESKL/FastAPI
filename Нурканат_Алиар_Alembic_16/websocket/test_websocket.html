@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        #login-form, #chat-container { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        #chat-container { display: none; }
+        #messages { height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+        .message { margin: 5px 0; padding: 5px; border-bottom: 1px solid #eee; }
+        .system { color: #666; font-style: italic; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>WebSocket Chat</h1>
+    
+    <div id="login-form">
+        <h2>Login</h2>
+        <input type="text" id="username" placeholder="Username" value="testuser">
+        <input type="password" id="password" placeholder="Password" value="testpass">
+        <button onclick="login()">Login</button>
+        <div id="login-status"></div>
+    </div>
+    
+    <div id="chat-container">
+        <h2>Chat</h2>
+        <div id="messages"></div>
+        <input type="text" id="message-input" placeholder="Type your message">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        let socket;
+        let currentUser;
+        
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch('http://localhost:8000/users/login/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
+                
+                const data = await response.json();
+                currentUser = username;
+                document.getElementById('login-status').textContent = 'Login successful!';
+                document.getElementById('login-status').style.color = 'green';
+                
+                // Show chat and connect WebSocket
+                document.getElementById('chat-container').style.display = 'block';
+                connectWebSocket(data.access_token);
+                
+            } catch (error) {
+                document.getElementById('login-status').textContent = `Login failed: ${error}`;
+                document.getElementById('login-status').style.color = 'red';
+            }
+        }
+        
+        function connectWebSocket(token) {
+            // Close existing connection if any
+            if (socket) socket.close();
+            
+            // Connect with the new token
+            socket = new WebSocket(`ws://localhost:8000/ws/chat?token=${encodeURIComponent(token)}`);
+            
+            socket.onopen = () => addMessage('System', 'Connected to chat', 'system');
+            socket.onclose = () => addMessage('System', 'Disconnected from chat', 'system');
+            socket.onerror = (err) => addMessage('Error', err.message || 'WebSocket error', 'error');
+            
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'error') {
+                    addMessage('Error', data.message, 'error');
+                } else if (data.type === 'system') {
+                    addMessage('System', data.message, 'system');
+                } else {
+                    addMessage(data.username, data.message);
+                }
+            };
+        }
+        
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const message = input.value.trim();
+            
+            if (message && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify({ content: message }));
+                input.value = '';
+            }
+        }
+        
+        function addMessage(sender, message, type = '') {
+            const messages = document.getElementById('messages');
+            const msgElement = document.createElement('div');
+            msgElement.className = `message ${type}`;
+            msgElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            messages.appendChild(msgElement);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        // Send message on Enter key
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
