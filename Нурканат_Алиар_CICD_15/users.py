@@ -11,13 +11,13 @@ router = APIRouter(
 
 @router.post("/register/", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 async def register(user: UserCreate, session: SessionDep):
-    db_user = await session.execute(select(User).where(User.username == user.username))
+    db_user = session.execute(select(User).where(User.username == user.username))
     if db_user.scalars().first():
         raise HTTPException(status_code=400, detail="Username already registered")
     new_user = User(username=user.username, password=hash_password(user.password))
     session.add(new_user)
-    await session.commit()
-    await session.refresh(new_user)
+    session.commit()
+    session.refresh(new_user)
     # send_email_task.delay(
     #     recipient=new_user.username,
     #     subject="Welcome to Notes App",
@@ -27,7 +27,7 @@ async def register(user: UserCreate, session: SessionDep):
 
 @router.post("/login/", response_model=Token)
 async def login(credentials: UserLogin, session: SessionDep):
-    user = await session.execute(select(User).where(User.username == credentials.username))
+    user = session.execute(select(User).where(User.username == credentials.username))
     user = user.scalars().first()
     if not user or not verify_password(credentials.password, user.password):
         raise HTTPException(status_code=401, detail="Incorrect username or password")
