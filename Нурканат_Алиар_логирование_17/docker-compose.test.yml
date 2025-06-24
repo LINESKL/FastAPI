@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://lineskin:altel8708@db:5432/lineskin
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=123
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: lineskin
+      POSTGRES_PASSWORD: altel8708
+      POSTGRES_DB: lineskin
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lineskin"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
