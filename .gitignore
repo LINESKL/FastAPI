@@ -5,3 +5,4 @@ venv/
 .env.test.local
 .env.production.local
 .gitignore
+*.env
