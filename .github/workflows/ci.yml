@@ -40,6 +40,9 @@ jobs:
         pip install -r requirements.txt
         pip install pytest pytest-asyncio pytest-cov
 
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/Нурканат_Алиар_CICD_15" >> $GITHUB_ENV
+
     - name: Run tests
       env:
         DATABASE_URL: postgresql+asyncpg://lineskin:altel8708@localhost:5432/lineskin
