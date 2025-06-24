@@ -6,3 +6,10 @@ venv/
 .env.production.local
 .gitignore
 *.env
+__pycache__/
+.idea/
+*.log
+*.sqlite
+*.db
+.pytest_cache/
+.github/workflows/*.yml
