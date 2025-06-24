@@ -68,3 +68,5 @@ jobs:
       run: |
         docker tag fastapi-app ${{ secrets.DOCKER_HUB_USERNAME }}/fastapi-app:latest
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/fastapi-app:latest
+
+        
