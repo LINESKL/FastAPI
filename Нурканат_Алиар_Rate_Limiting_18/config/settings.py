@@ -15,6 +15,8 @@ class Settings(BaseSettings):
 
     REDIS_URL: RedisDsn = Field(..., env="REDIS_URL")
     REDIS_POOL_SIZE: int = 5
+    RATE_LIMIT_REQUESTS: int = Field(..., env="RATE_LIMIT_REQUESTS")
+    RATE_LIMIT_WINDOW: int = Field(..., env="RATE_LIMIT_WINDOW")
 
     CORS_ORIGINS: str = "*"
     CORS_METHODS: str = "*"
